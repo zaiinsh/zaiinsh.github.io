@@ -1173,7 +1173,7 @@
             <span class="cta-title">Included in Your Instant Download ($15 USD)</span>
             <span class="cta-desc">38 Printable PDFs with clickable checkboxes + 38 Obsidian-ready Markdown files + free updates as methodologies evolve.</span>
           </div>
-          <a href="https://zxainz.gumroad.com/l/pentest_checklists" target="_blank" rel="noopener noreferrer" class="cta-button">
+          <a href="https://zaiinsh.gumroad.com/l/pentest_checklists" target="_blank" rel="noopener noreferrer" class="cta-button">
             <span>Get Instant Access &mdash; $15</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
               <line x1="7" y1="17" x2="17" y2="7"/>
@@ -1184,7 +1184,7 @@
       `,
       footer: `
         <div class="sticky-footer-content">
-          <a href="https://zxainz.gumroad.com/l/pentest_checklists" target="_blank" rel="noopener noreferrer" class="cta-button">
+          <a href="https://zaiinsh.gumroad.com/l/pentest_checklists" target="_blank" rel="noopener noreferrer" class="cta-button">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
               <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
               <line x1="3" y1="6" x2="21" y2="6"/>
@@ -1198,7 +1198,7 @@
               <span class="status-pulse-dot"></span>
               <span>38 Clickable PDFs + 38 Obsidian Markdown Files &bull; Free Lifetime Updates</span>
             </div>
-            <a href="https://zxainz.gumroad.com/" target="_blank" rel="noopener noreferrer" class="footer-email-link">zxainz.gumroad.com</a>
+            <a href="https://zaiinsh.gumroad.com/" target="_blank" rel="noopener noreferrer" class="footer-email-link">zaiinsh.gumroad.com</a>
           </div>
         </div>
       `
@@ -1219,7 +1219,7 @@
       currency: 'USD',
       coverBadge: '38 Checklists • 2,097 Items',
       image: 'https://public-files.gumroad.com/81zdydidlx5wz1cxxgilb64hxppt',
-      buyUrl: 'https://zxainz.gumroad.com/l/pentest_checklists',
+      buyUrl: 'https://zaiinsh.gumroad.com/l/pentest_checklists',
       summary: '38 professional penetration testing checklists with 2,097 tick-box items across 8 offensive domains. Every item follows the real engagement workflow (Scoping → Recon → Exploitation → Post-Exploitation → Reporting) with what to check, the exact technique, and copy-paste tool commands.',
       pills: ['Network & Infra (6)', 'Web & API (6)', 'Cloud & K8s (7)', 'Active Directory (4)', 'Mobile MASVS 2.1 (3)', 'Recon & OSINT (3)', 'LLM / AI & Red Team (5)', 'Engagement & QA (4)']
     }
