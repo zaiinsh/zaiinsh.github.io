@@ -91,6 +91,7 @@
     initConsoleSecurityBanner();
     _verifySelfIntegrity();
     initDynamicLiquidCanvas();
+    initDigitalProductsCatalog();
     init3DTiltEngine();
     initModalSystem();
     initCopyrightYear();
@@ -104,75 +105,45 @@
     const canvas = document.getElementById('liquidCanvas');
     if (!canvas) return;
 
+    const isLowSpec =
+      (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) ||
+      (navigator.deviceMemory && navigator.deviceMemory <= 4) ||
+      (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+    if (isLowSpec) {
+      document.body.classList.add('perf-lite');
+    }
+
     const ctx = canvas.getContext('2d', { alpha: true, desynchronized: true });
     let width, height;
     let mouse = { x: null, y: null, targetX: null, targetY: null };
+    const SCALE = 0.35;
 
     // Fluid Orbs with pre-computed color stops (zero regex allocations per frame)
     const orbs = [
-      { x: 0.2, y: 0.3, radius: 140, cStart: 'rgba(255, 42, 59, 0.16)', cMid: 'rgba(255, 42, 59, 0.03)', vx: 0.0005, vy: 0.0006, phase: 0 },
-      { x: 0.75, y: 0.2, radius: 170, cStart: 'rgba(255, 60, 75, 0.12)', cMid: 'rgba(255, 60, 75, 0.02)', vx: -0.0006, vy: 0.0005, phase: 1.2 },
-      { x: 0.8, y: 0.75, radius: 180, cStart: 'rgba(220, 225, 238, 0.60)', cMid: 'rgba(220, 225, 238, 0.06)', vx: -0.0004, vy: -0.0006, phase: 2.4 },
-      { x: 0.15, y: 0.8, radius: 160, cStart: 'rgba(240, 242, 248, 0.65)', cMid: 'rgba(240, 242, 248, 0.06)', vx: 0.0006, vy: -0.0004, phase: 3.6 },
-      { x: 0.5, y: 0.5, radius: 130, cStart: 'rgba(255, 42, 59, 0.08)', cMid: 'rgba(255, 42, 59, 0.015)', vx: 0.0004, vy: -0.0005, phase: 4.8 }
+      { x: 0.2, y: 0.3, radius: 110, cStart: 'rgba(255, 42, 59, 0.16)', cMid: 'rgba(255, 42, 59, 0.03)', vx: 0.0005, vy: 0.0006, phase: 0 },
+      { x: 0.75, y: 0.2, radius: 130, cStart: 'rgba(255, 60, 75, 0.12)', cMid: 'rgba(255, 60, 75, 0.02)', vx: -0.0006, vy: 0.0005, phase: 1.2 },
+      { x: 0.8, y: 0.75, radius: 140, cStart: 'rgba(220, 225, 238, 0.60)', cMid: 'rgba(220, 225, 238, 0.06)', vx: -0.0004, vy: -0.0006, phase: 2.4 },
+      { x: 0.15, y: 0.8, radius: 125, cStart: 'rgba(240, 242, 248, 0.65)', cMid: 'rgba(240, 242, 248, 0.06)', vx: 0.0006, vy: -0.0004, phase: 3.6 },
+      { x: 0.5, y: 0.5, radius: 100, cStart: 'rgba(255, 42, 59, 0.08)', cMid: 'rgba(255, 42, 59, 0.015)', vx: 0.0004, vy: -0.0005, phase: 4.8 }
     ];
 
-    // High performance half-resolution buffer (GPU upscales smoothly, saving 75% pixel fills)
-    function resize() {
-      width = canvas.width = Math.max(320, Math.floor(window.innerWidth * 0.5));
-      height = canvas.height = Math.max(240, Math.floor(window.innerHeight * 0.5));
-    }
-
-    window.addEventListener('resize', resize, { passive: true });
-    resize();
-
-    window.addEventListener('pointermove', (e) => {
-      if (e.pointerType === 'touch') return;
-      mouse.targetX = e.clientX * 0.5;
-      mouse.targetY = e.clientY * 0.5;
-    }, { passive: true });
-
-    // Pause rendering while user is scrolling to give 100% frame budget to scrolling
-    let isScrolling = false;
-    let scrollTimer = null;
-    window.addEventListener('scroll', () => {
-      isScrolling = true;
-      if (scrollTimer) clearTimeout(scrollTimer);
-      scrollTimer = setTimeout(() => { isScrolling = false; }, 80);
-    }, { passive: true });
-
-    let lastTime = 0;
-
-    function render(timestamp) {
-      // Pause when tab is backgrounded, modal is open, or during rapid scroll
-      if (isModalOpen || document.hidden || isScrolling) {
-        requestAnimationFrame(render);
-        return;
-      }
-
-      if (!lastTime) lastTime = timestamp;
-      const dt = Math.min((timestamp - lastTime) / 1000, 0.08);
-      lastTime = timestamp;
-
-      // Clear Canvas
+    function drawFrame(dt) {
       ctx.clearRect(0, 0, width, height);
 
-      // Smooth mouse interpolation
       if (mouse.targetX !== null) {
         if (mouse.x === null) {
           mouse.x = mouse.targetX;
           mouse.y = mouse.targetY;
         } else {
-          mouse.x += (mouse.targetX - mouse.x) * 0.06;
-          mouse.y += (mouse.targetY - mouse.y) * 0.06;
+          mouse.x += (mouse.targetX - mouse.x) * 0.08;
+          mouse.y += (mouse.targetY - mouse.y) * 0.08;
         }
       }
 
-      // Draw flowing liquid orbs with pre-calculated color stops
       for (let i = 0; i < orbs.length; i++) {
         const orb = orbs[i];
         orb.phase += dt * 0.8;
-
         orb.x += orb.vx;
         orb.y += orb.vy;
 
@@ -182,24 +153,19 @@
         let pixelX = orb.x * width;
         let pixelY = orb.y * height;
 
-        // Subtle interactive mouse reaction
         if (mouse.x !== null) {
           const dx = pixelX - mouse.x;
           const dy = pixelY - mouse.y;
           const dist = Math.hypot(dx, dy);
-          if (dist < 200 && dist > 1) {
-            const force = (1 - dist / 200) * 22;
+          if (dist < 160 && dist > 1) {
+            const force = (1 - dist / 160) * 16;
             pixelX += (dx / dist) * force;
             pixelY += (dy / dist) * force;
           }
         }
 
-        const currentRadius = orb.radius + Math.sin(orb.phase) * 18;
-
-        const grad = ctx.createRadialGradient(
-          pixelX, pixelY, 0,
-          pixelX, pixelY, currentRadius
-        );
+        const currentRadius = orb.radius + Math.sin(orb.phase) * 14;
+        const grad = ctx.createRadialGradient(pixelX, pixelY, 0, pixelX, pixelY, currentRadius);
         grad.addColorStop(0, orb.cStart);
         grad.addColorStop(0.65, orb.cMid);
         grad.addColorStop(1, 'transparent');
@@ -209,7 +175,52 @@
         ctx.arc(pixelX, pixelY, currentRadius, 0, Math.PI * 2);
         ctx.fill();
       }
+    }
 
+    function resize() {
+      width = canvas.width = Math.max(240, Math.floor(window.innerWidth * SCALE));
+      height = canvas.height = Math.max(180, Math.floor(window.innerHeight * SCALE));
+      if (isLowSpec) drawFrame(0);
+    }
+
+    window.addEventListener('resize', resize, { passive: true });
+    resize();
+
+    // On low-spec systems, render static backdrop once (0% continuous CPU/GPU overhead)
+    if (isLowSpec) return;
+
+    window.addEventListener('pointermove', (e) => {
+      if (e.pointerType === 'touch') return;
+      mouse.targetX = e.clientX * SCALE;
+      mouse.targetY = e.clientY * SCALE;
+    }, { passive: true });
+
+    let isScrolling = false;
+    let scrollTimer = null;
+    window.addEventListener('scroll', () => {
+      isScrolling = true;
+      if (scrollTimer) clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(() => { isScrolling = false; }, 100);
+    }, { passive: true });
+
+    let lastTime = 0;
+    const FRAME_INTERVAL = 42; // ~24 FPS cap (cuts GPU gradient fills by 60% with identical visual smoothness)
+
+    function render(timestamp) {
+      if (isModalOpen || document.hidden || isScrolling) {
+        requestAnimationFrame(render);
+        return;
+      }
+
+      if (timestamp - lastTime < FRAME_INTERVAL) {
+        requestAnimationFrame(render);
+        return;
+      }
+
+      const dt = lastTime ? Math.min((timestamp - lastTime) / 1000, 0.1) : 0.04;
+      lastTime = timestamp;
+
+      drawFrame(dt);
       requestAnimationFrame(render);
     }
 
@@ -291,6 +302,7 @@
 
       // Accessibility & Click handling
       cardWrapper.addEventListener('keydown', (e) => {
+        if (e.target.closest('a')) return;
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           const cardId = cardWrapper.getAttribute('data-card-id');
@@ -298,7 +310,8 @@
         }
       });
 
-      cardWrapper.addEventListener('click', () => {
+      cardWrapper.addEventListener('click', (e) => {
+        if (e.target.closest('a')) return;
         const cardId = cardWrapper.getAttribute('data-card-id');
         openModal(cardId);
       });
@@ -1066,8 +1079,229 @@
           </div>
         </div>
       `
+    },
+    'product-pentest-checklists': {
+      tag: 'Digital Product &bull; 38 Checklists &bull; 2,097 Actionable Items',
+      title: 'Pentest Checklist Library — Professional Edition',
+      intro: 'Built from real penetration testing workflows so you never stare at a target mid-engagement wondering what you missed. Every checklist follows the full engagement flow (Scoping → Recon → Exploitation → Post-Exploitation → Reporting), and every item includes: (1) What to check, (2) The exact technique, and (3) The copy-paste tool command—plus evidence collection reminders at the end of every phase.',
+      content: `
+        <div class="service-filter-bar" role="tablist" aria-label="Filter checklist domains">
+          <button type="button" class="filter-pill active" data-filter="all" role="tab" aria-selected="true">
+            <span class="pill-label">All 8 Domains</span>
+            <span class="pill-badge">38</span>
+          </button>
+          <button type="button" class="filter-pill" data-filter="web-mobile" role="tab" aria-selected="false">
+            <span class="pill-label">Web, API &amp; Mobile</span>
+            <span class="pill-badge">9</span>
+          </button>
+          <button type="button" class="filter-pill" data-filter="infra-cloud-ad" role="tab" aria-selected="false">
+            <span class="pill-label">Network, AD &amp; Cloud</span>
+            <span class="pill-badge">17</span>
+          </button>
+          <button type="button" class="filter-pill" data-filter="recon-ai-ops" role="tab" aria-selected="false">
+            <span class="pill-label">Recon, Ops &amp; AI/LLM</span>
+            <span class="pill-badge">12</span>
+          </button>
+        </div>
+
+        <div class="service-catalog-grid">
+          ${createCategoryCard('Web & API Security', icons.webApi, '6 Checklists', [
+            'Web Application Pentesting (OWASP WSTG v4.2 mapped)',
+            'REST & API Hacking Methodology',
+            'GraphQL Security & Introspection Exploitation',
+            'JWT & Session Management Attacks',
+            'OAuth 2.0 & OIDC Authentication Flows',
+            'WebSocket Security Testing'
+          ], 'web-mobile')}
+
+          ${createCategoryCard('Network & Infrastructure', icons.network, '6 Checklists', [
+            'External Network & Perimeter Penetration Testing',
+            'Internal Network Pentesting & Lateral Movement',
+            'Wireless (Wi-Fi / WPA2 / WPA3 / Enterprise) Auditing',
+            'VPN Concentrator & Tunnel Security Testing',
+            'Firewall Ruleset & Network Segmentation Validation',
+            'VoIP & SIP Infrastructure Enumeration & Exploitation'
+          ], 'infra-cloud-ad')}
+
+          ${createCategoryCard('Cloud & Containers', icons.cloud, '7 Checklists', [
+            'AWS IAM, S3, Metadata & Account Enumeration',
+            'Microsoft Azure & Cloud Resource Exploitation',
+            'Google Cloud Platform (GCP) Security Auditing',
+            'Kubernetes (K8s) Cluster & Pod Security Assessment',
+            'Docker & Container Escape Techniques',
+            'CI/CD Pipeline Poisoning & Runner Exploitation',
+            'Serverless Function & Event-Driven Injection Testing'
+          ], 'infra-cloud-ad')}
+
+          ${createCategoryCard('Active Directory & Identity', icons.compliance, '4 Checklists', [
+            'Active Directory Domain Enumeration & Privilege Escalation (NetExec / BloodHound CE)',
+            'Microsoft Entra ID (Azure AD) Hybrid Identity Attacks',
+            'Kerberos Delegation, Kerberoasting & AS-REP Roasting',
+            'Enterprise Password Policy, Spraying & Hash Cracking Audits'
+          ], 'infra-cloud-ad')}
+
+          ${createCategoryCard('Mobile Application Security', icons.incident, '3 Checklists', [
+            'General Mobile App Security (OWASP MASVS 2.1 Aligned)',
+            'Android APK Reverse Engineering, Frida & Intent Testing',
+            'iOS IPA Binary Analysis, Keychain & Runtime Manipulation'
+          ], 'web-mobile')}
+
+          ${createCategoryCard('Reconnaissance & OSINT', icons.osint, '3 Checklists', [
+            'Open-Source Intelligence (OSINT) & Target Profiling',
+            'Bug Bounty Wide-Scope Reconnaissance Workflow',
+            'External Attack Surface Mapping & Asset Discovery (Nuclei v3.x)'
+          ], 'recon-ai-ops')}
+
+          ${createCategoryCard('Specialized, Red Team & AI/LLM (2026)', icons.redTeam, '5 Checklists', [
+            'LLM & AI Application Security (OWASP LLM Top 10 2026 — Prompt Injection to Model Poisoning)',
+            'Red Team Operations & Adversary Emulation Tradecraft',
+            'Social Engineering & Phishing Campaign Execution',
+            'Physical Security & Badge Cloning Assessments',
+            'IoT, Firmware Extraction & Hardware Interface Testing'
+          ], 'recon-ai-ops')}
+
+          ${createCategoryCard('Engagement Process & Reporting QA', icons.reports, '4 Checklists', [
+            'Pre-Engagement Scoping & Rules of Engagement (RoE)',
+            'Evidence Collection & Screenshot Verification Per Phase',
+            'Penetration Test Report Quality Assurance (QA)',
+            'Post-Remediation Retest & Fix Verification Workflow'
+          ], 'recon-ai-ops')}
+        </div>
+
+        <div class="service-modal-cta">
+          <div class="cta-text-group">
+            <span class="cta-title">Included in Your Instant Download ($15 USD)</span>
+            <span class="cta-desc">38 Printable PDFs with clickable checkboxes + 38 Obsidian-ready Markdown files + free updates as methodologies evolve.</span>
+          </div>
+          <a href="https://zxainz.gumroad.com/l/pentest_checklists" target="_blank" rel="noopener noreferrer" class="cta-button">
+            <span>Get Instant Access &mdash; $15</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <line x1="7" y1="17" x2="17" y2="7"/>
+              <polyline points="7 7 17 7 17 17"/>
+            </svg>
+          </a>
+        </div>
+      `,
+      footer: `
+        <div class="sticky-footer-content">
+          <a href="https://zxainz.gumroad.com/l/pentest_checklists" target="_blank" rel="noopener noreferrer" class="cta-button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <path d="M16 10a4 4 0 0 1-8 0"/>
+            </svg>
+            <span>Buy on Gumroad &mdash; $15 USD</span>
+          </a>
+
+          <div class="sticky-footer-meta">
+            <div class="footer-meta-item">
+              <span class="status-pulse-dot"></span>
+              <span>38 Clickable PDFs + 38 Obsidian Markdown Files &bull; Free Lifetime Updates</span>
+            </div>
+            <a href="https://zxainz.gumroad.com/" target="_blank" rel="noopener noreferrer" class="footer-email-link">zxainz.gumroad.com</a>
+          </div>
+        </div>
+      `
     }
   };
+
+  /* ==========================================================================
+     DIGITAL PRODUCTS CATALOG ENGINE (Gumroad)
+     To add a new product in the future: add a new object to `digitalProducts` below
+     and push to GitHub. It will automatically render on the page and in the modal!
+     ========================================================================== */
+  const digitalProducts = [
+    {
+      id: 'product-pentest-checklists',
+      title: 'Pentest Checklist Library — Professional Edition (38 Checklists)',
+      badge: 'Flagship Release • 2026 Edition',
+      price: '$15',
+      currency: 'USD',
+      coverBadge: '38 Checklists • 2,097 Items',
+      image: 'https://public-files.gumroad.com/81zdydidlx5wz1cxxgilb64hxppt',
+      buyUrl: 'https://zxainz.gumroad.com/l/pentest_checklists',
+      summary: '38 professional penetration testing checklists with 2,097 tick-box items across 8 offensive domains. Every item follows the real engagement workflow (Scoping → Recon → Exploitation → Post-Exploitation → Reporting) with what to check, the exact technique, and copy-paste tool commands.',
+      pills: ['Network & Infra (6)', 'Web & API (6)', 'Cloud & K8s (7)', 'Active Directory (4)', 'Mobile MASVS 2.1 (3)', 'Recon & OSINT (3)', 'LLM / AI & Red Team (5)', 'Engagement & QA (4)']
+    }
+  ];
+
+  function initDigitalProductsCatalog() {
+    const grid = document.getElementById('productsGrid');
+    if (!grid) return;
+
+    const placeholderCard = document.getElementById('storefrontPlaceholderCard');
+
+    digitalProducts.forEach((prod) => {
+      // Skip if already pre-rendered in index.html
+      if (grid.querySelector(`[data-product-card="${prod.id}"]`)) return;
+
+      const safeId = escapeHTML(prod.id);
+      const safeTitle = escapeHTML(prod.title);
+      const safeBadge = escapeHTML(prod.badge || 'Digital Product');
+      const safePrice = escapeHTML(prod.price || '$15');
+      const safeCurrency = escapeHTML(prod.currency || 'USD');
+      const safeBuyUrl = sanitizeUrl(prod.buyUrl);
+      const safeSummary = escapeHTML(prod.summary);
+      const pillsList = (prod.pills || []).slice(0, 3).map(p => `<span class="micro-pill">${escapeHTML(p)}</span>`).join('');
+
+      const cardEl = document.createElement('a');
+      cardEl.href = safeBuyUrl;
+      cardEl.target = '_blank';
+      cardEl.rel = 'noopener noreferrer';
+      cardEl.className = 'card-3d-wrapper card-link-wrapper';
+      cardEl.setAttribute('data-tilt-card', '');
+      cardEl.setAttribute('data-product-card', safeId);
+      cardEl.innerHTML = `
+        <div class="card-glass-body">
+          <div class="card-glare-effect"></div>
+          <div class="card-layer-bg-ambient"></div>
+          <div class="card-content-3d">
+            <div class="card-top-bar">
+              <div class="card-icon-glass icon-red">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 11l3 3L22 4"/>
+                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                </svg>
+              </div>
+              <div class="product-badge-cluster">
+                <span class="badge-editorial">${safeBadge}</span>
+                <span class="badge-price">${safePrice} ${safeCurrency}</span>
+              </div>
+            </div>
+            <div class="card-info-group">
+              <h3 class="card-heading-3d">${safeTitle}</h3>
+              <p class="card-summary-3d">${safeSummary}</p>
+            </div>
+            <div class="card-pills-row">
+              ${pillsList}
+            </div>
+            <div class="card-action-bar">
+              <span class="action-caption">Get Instant Access &mdash; ${safePrice}</span>
+              <div class="action-3d-disc">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="7" y1="17" x2="17" y2="7"/>
+                  <polyline points="7 7 17 7 17 17"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div class="card-prism-edge"></div>
+        </div>
+      `;
+
+      if (placeholderCard && placeholderCard.parentNode === grid) {
+        grid.insertBefore(cardEl, placeholderCard);
+      } else {
+        grid.appendChild(cardEl);
+      }
+    });
+
+    // Keep 2-column grid 100% symmetrical: show Storefront card when product count is odd (1, 3, 5), hide when even (2, 4, 6)
+    const productCount = grid.querySelectorAll('[data-product-card]').length;
+    if (placeholderCard) {
+      placeholderCard.style.display = (productCount % 2 === 1) ? '' : 'none';
+    }
+  }
 
   function openModal(cardId) {
     const data = cardData[cardId];

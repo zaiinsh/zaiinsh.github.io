@@ -17,10 +17,10 @@
   --color-crimson-glow: rgba(255, 42, 59, 0.45);
   --color-crimson-subtle: rgba(255, 42, 59, 0.08);
 
-  /* True Liquid Glass Specular System (GPU Accelerated) */
-  --liquid-glass-bg: rgba(255, 255, 255, 0.78);
-  --liquid-glass-bg-hover: rgba(255, 255, 255, 0.88);
-  --liquid-glass-blur: blur(20px);
+  /* True Liquid Glass Specular System (GPU Accelerated & Optimized) */
+  --liquid-glass-bg: rgba(255, 255, 255, 0.88);
+  --liquid-glass-bg-hover: rgba(255, 255, 255, 0.95);
+  --liquid-glass-blur: blur(8px);
   
   --liquid-glass-border: rgba(255, 255, 255, 0.85);
   --liquid-glass-border-subtle: rgba(12, 14, 18, 0.08);
@@ -47,6 +47,21 @@
   --ease-elastic: cubic-bezier(0.19, 1, 0.22, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+}
+
+/* Automatic High-Speed Fallback for Low-Spec Hardware & Reduced Motion */
+body.perf-lite {
+  --liquid-glass-bg: rgba(255, 255, 255, 0.96);
+  --liquid-glass-bg-hover: #ffffff;
+  --liquid-glass-blur: none;
+}
+
+body.perf-lite .navbar-glass,
+body.perf-lite .hero-3d-card,
+body.perf-lite .card-glass-body,
+body.perf-lite .footer-glass {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 /* Reset & Box Sizing */
@@ -76,7 +91,7 @@ body {
 }
 
 /* ==========================================================================
-   Dynamic Liquid Fluid Simulation Canvas (60FPS Interactive Physics)
+   Dynamic Liquid Fluid Simulation Canvas (Adaptive FPS Interactive Physics)
    ========================================================================== */
 .liquid-canvas {
   position: fixed;
@@ -102,36 +117,30 @@ body {
   border-radius: 50%;
   pointer-events: none;
   transform: translateZ(0);
-  animation: liquidOrbit 24s ease-in-out infinite alternate;
 }
 
 .glow-red {
   width: 650px;
   height: 650px;
-  background: radial-gradient(circle at center, rgba(255, 42, 59, 0.16) 0%, rgba(255, 42, 59, 0.04) 45%, transparent 70%);
+  background: radial-gradient(circle at center, rgba(255, 42, 59, 0.14) 0%, rgba(255, 42, 59, 0.03) 45%, transparent 70%);
   top: -150px;
   right: -100px;
-  animation-duration: 20s;
 }
 
 .glow-white {
   width: 750px;
   height: 750px;
-  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.95) 0%, rgba(235, 240, 250, 0.35) 45%, transparent 75%);
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.92) 0%, rgba(235, 240, 250, 0.3) 45%, transparent 75%);
   bottom: -150px;
   left: -200px;
-  animation-duration: 28s;
-  animation-delay: -6s;
 }
 
 .glow-dark {
   width: 500px;
   height: 500px;
-  background: radial-gradient(circle at center, rgba(12, 14, 18, 0.06) 0%, transparent 65%);
+  background: radial-gradient(circle at center, rgba(12, 14, 18, 0.05) 0%, transparent 65%);
   top: 40%;
   left: 30%;
-  animation-duration: 22s;
-  animation-delay: -11s;
 }
 
 .cyber-grid-mesh {
@@ -141,13 +150,6 @@ body {
     linear-gradient(to right, rgba(12, 14, 18, 0.025) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(12, 14, 18, 0.025) 1px, transparent 1px);
   background-size: 48px 48px;
-  mask-image: radial-gradient(ellipse at center, rgba(0, 0, 0, 1) 30%, transparent 85%);
-}
-
-@keyframes liquidOrbit {
-  0% { transform: translate3d(0, 0, 0) scale(1); }
-  50% { transform: translate3d(60px, 45px, 0) scale(1.12); }
-  100% { transform: translate3d(-45px, -60px, 0) scale(0.92); }
 }
 
 /* ==========================================================================
@@ -530,6 +532,44 @@ body {
   transform: translateY(2px);
 }
 
+.hero-store-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--color-carbon-900);
+  padding: 9px 20px;
+  border-radius: var(--radius-pill);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(12, 14, 18, 0.06);
+  border: 1px solid rgba(255, 42, 59, 0.28);
+  transition: all 0.25s var(--ease-elastic);
+  position: relative;
+}
+
+.hero-store-btn .btn-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--color-crimson);
+  transition: transform 0.25s var(--ease-spring), color 0.25s ease;
+}
+
+.hero-store-btn:hover {
+  background: var(--color-crimson);
+  color: var(--color-white);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px var(--color-crimson-glow);
+  border-color: var(--color-crimson);
+}
+
+.hero-store-btn:hover .btn-icon {
+  color: var(--color-white);
+  transform: scale(1.1);
+}
+
 .hero-social-cluster {
   display: flex;
   align-items: center;
@@ -579,9 +619,8 @@ body {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.8) 0%, transparent 60%);
-  opacity: 0.6;
-  mix-blend-mode: overlay;
+  background: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.45) 0%, transparent 60%);
+  opacity: 0.7;
 }
 
 .glass-prism-border {
@@ -600,7 +639,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: 28px;
-  perspective: 1400px;
 }
 
 .section-title-wrap {
@@ -635,14 +673,12 @@ body {
   grid-template-columns: repeat(2, 1fr);
   grid-auto-rows: 1fr;
   gap: 28px;
-  perspective: 1400px;
 }
 
 /* Outer 3D Perspective Card Wrapper */
 .card-3d-wrapper {
   position: relative;
   perspective: 1200px;
-  transform-style: preserve-3d;
   outline: none;
   cursor: pointer;
   border-radius: var(--radius-lg);
@@ -661,8 +697,7 @@ body {
   border-radius: var(--radius-lg);
   box-shadow: var(--liquid-glass-shadow);
   padding: 38px 36px 30px;
-  transform-style: preserve-3d;
-  transform: perspective(1000px) rotateX(0deg) rotateY(0deg) translateZ(0);
+  transform: translateZ(0);
   transition: 
     box-shadow 0.35s var(--ease-elastic), 
     border-color 0.35s ease,
@@ -673,16 +708,19 @@ body {
   flex-direction: column;
 }
 
+.card-3d-wrapper:hover .card-glass-body {
+  transform-style: preserve-3d;
+}
+
 /* Dynamic Interactive Glare Reflection that tracks light */
 .card-glare-effect {
   position: absolute;
-  inset: -100%;
+  inset: -60%;
   pointer-events: none;
-  background: radial-gradient(circle 350px at 50% 50%, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.1) 40%, transparent 70%);
+  background: radial-gradient(circle 320px at 50% 50%, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.05) 45%, transparent 70%);
   opacity: 0;
   transform: translate3d(0, 0, 0);
   transition: opacity 0.3s ease;
-  mix-blend-mode: overlay;
   z-index: 10;
 }
 
@@ -952,6 +990,36 @@ a.micro-pill-link:hover {
   box-shadow: 
     inset 0 1.5px 2px rgba(255, 255, 255, 1),
     inset 0 -1.5px 2px rgba(0, 0, 0, 0.04);
+}
+
+/* ==========================================================================
+   DEDICATED DIGITAL PRODUCTS & OFFENSIVE TOOLKITS SECTION
+   ========================================================================== */
+.card-link-wrapper {
+  text-decoration: none;
+  color: inherit;
+}
+
+.product-badge-cluster {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  transform: translateZ(30px);
+}
+
+.badge-price {
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 5px 13px;
+  border-radius: var(--radius-pill);
+  background: var(--color-carbon-900);
+  color: var(--color-white);
+  border: 1px solid rgba(255, 42, 59, 0.45);
+  box-shadow: 0 4px 12px rgba(12, 14, 18, 0.14);
 }
 
 /* ==========================================================================
@@ -2152,6 +2220,17 @@ a.micro-pill-link:hover {
     grid-template-columns: 1fr;
     gap: 28px;
   }
+
+  .product-card-layout,
+  .products-grid-3d.is-multi-grid,
+  .products-grid-3d.is-multi-grid.is-odd-count > .product-showcase-card:first-child .product-card-layout {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .products-grid-3d.is-multi-grid.is-odd-count > .product-showcase-card:first-child .product-highlights-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* 2. Tablet Portrait & Large Phablets (<= 820px) */
@@ -2167,10 +2246,40 @@ a.micro-pill-link:hover {
   .navbar-glass {
     padding: 12px 20px;
   }
+
+  .product-highlights-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* 3. Phablets & Mobile Landscape (<= 680px) */
 @media (max-width: 680px) {
+  .section-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .store-visit-pill {
+    margin-left: 8px;
+  }
+
+  .product-action-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .product-buy-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .product-inspect-trigger {
+    justify-content: space-between;
+    width: 100%;
+  }
+
   .modal-3d-backdrop {
     padding: 16px 12px;
   }
@@ -2333,6 +2442,18 @@ a.micro-pill-link:hover {
   .card-glass-body {
     padding: 26px 18px 22px;
     border-radius: var(--radius-md);
+  }
+
+  .product-glass-body {
+    padding: 22px 16px 20px;
+  }
+
+  .product-title-3d {
+    font-size: 1.25rem;
+  }
+
+  .product-format-strip {
+    grid-template-columns: 1fr;
   }
 
   .card-heading-3d {
